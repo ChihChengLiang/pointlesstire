@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+  </head>
+  <body>
+    <!--<p>At least you get the right template</p>-->
+    <form>
+      <ol>
+      {% for x in range(1, n+1) %}
+        <li>
+        {% if x % 15== 0: %} 
+          FizzBuzz
+        {% elif x % 3 == 0: %}
+          Fizz
+        {% elif x % 5 == 0: %}
+          Buzz
+        {% else: %}
+          {{ x }}
+        {% endif %}
+        </li>
+      {% endfor %}
+      </ol>
+    </form>
+
+  </body>
+</html>
