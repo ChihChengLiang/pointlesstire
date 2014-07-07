@@ -5,7 +5,7 @@ import cgi
 import string
 import re
 from jinja2 import Environment, FileSystemLoader
-
+from google.appengine.ext import db
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PWD_RE  = re.compile(r"^.{3,20}$")
@@ -13,6 +13,15 @@ EML_RE  = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
 
 alphabet_list=list(string.lowercase)
 
+class BaseHandler(webapp2.RequestHandler):
+  def write(self, filename, **template_values):
+    path = os.path.join(os.path.dirname(__file__), filename)
+    self.response.out.write(template.render(path, template_values))
+  def render(self, filename,**template_values):
+    jinja_env= Environment(loader=FileSystemLoader('templates'))
+    template = jinja_env.get_template(filename)
+    self.response.out.write(template.render(template_values))
+  
 class MainHandler(webapp2.RequestHandler):
   def get(self):
     template_values = {
@@ -91,6 +100,12 @@ class FizzBuzz(webapp2.RequestHandler):
     template = jinja_env.get_template('FizzBuzz.html')
     self.response.out.write(template.render(n=n))
     #self.response.out.write("<h1>Python code work fine!n=%d</h1>" % n)
+
+class Blog(db.Model):
+  title = db.StringProperty(required=True)
+  content = db.TextProperty(required=True)
+  created = db.DateTimeProperty(auto_now_add=True)
+  
 
 
 app = webapp2.WSGIApplication([
