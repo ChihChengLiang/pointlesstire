@@ -3,11 +3,10 @@
 
 {% for post in posts: %}
   <div class="panel panel-default">
-    <div class="panel-heading">{{ post.subject }}</div>
+    <div class="panel-heading"><a href="/blog/{{post.key().id()}}">{{ post.subject }}</a><small>{{ post.created }}</small></div>
       <div class="panel-body">
         {{ post.content }}
       </div>
-      <div class="panel-footer">{{ post.created }}</div>
   </div> 
 {% endfor %}
   

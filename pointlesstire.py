@@ -103,7 +103,7 @@ class FizzBuzz(webapp2.RequestHandler):
     self.response.out.write(template.render(n=n))
     #self.response.out.write("<h1>Python code work fine!n=%d</h1>" % n)
 
-## The blog
+## The blog #########################
 
 def blog_key(name="default"):
   return db.Key.from_path('blogs',name)
@@ -125,12 +125,20 @@ class BlogNewPost(BaseHandler):
     subject = self.request.get("subject")
     content = self.request.get("content")
     if subject and content:
-      a = BlogModel(subject=subject, content=content) 
+      a = BlogModel(parent= blog_key(), subject=subject, content=content) 
       a.put()
-      self.redirect("/blog")
+      self.redirect("/blog/%s" % str(a.key().id()))
     else:
       self.render('blog_newpost.html',error=True)
-    
+
+class PostPage(BaseHandler):
+  def get(self,post_id):
+    key = db.Key.from_path('BlogModel',int(post_id), parent=blog_key())
+    post= db.get(key)
+    if not post:
+      self.render("custom404.html")
+      return
+    self.render("blog_permalink.html", post=post)
 
 app = webapp2.WSGIApplication([
   ('/', MainHandler),
@@ -138,6 +146,7 @@ app = webapp2.WSGIApplication([
   ('/signup',SignUp),
   ('/welcome',Welcome),
   ('/FizzBuzz',FizzBuzz),
-  webapp2.Route('/blog',handler=Blog),
-  webapp2.Route('/blog/newpost',handler=BlogNewPost)
+  ('/blog/?',Blog),
+  ('/blog/newpost',BlogNewPost),
+  ('/blog/(\d+)',PostPage)
 ], debug=True)
