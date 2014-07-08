@@ -14,9 +14,11 @@ EML_RE  = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
 alphabet_list=list(string.lowercase)
 
 class BaseHandler(webapp2.RequestHandler):
+  
   def write(self, filename, **template_values):
     path = os.path.join(os.path.dirname(__file__), filename)
     self.response.out.write(template.render(path, template_values))
+    
   def render(self, filename,**template_values):
     jinja_env= Environment(loader=FileSystemLoader('templates'))
     template = jinja_env.get_template(filename)
@@ -101,17 +103,27 @@ class FizzBuzz(webapp2.RequestHandler):
     self.response.out.write(template.render(n=n))
     #self.response.out.write("<h1>Python code work fine!n=%d</h1>" % n)
 
-class Blog(db.Model):
+class BlogModel(db.Model):
   title = db.StringProperty(required=True)
   content = db.TextProperty(required=True)
   created = db.DateTimeProperty(auto_now_add=True)
   
-
+class Blog(BaseHandler):
+  def get(self):
+    self.render('blog_main.html')
+    
+class BlogNewPost(BaseHandler):
+  def get(self):
+    self.render('blog_newpost.html')
+  def post(self):
+    pass
 
 app = webapp2.WSGIApplication([
   ('/', MainHandler),
   ('/ROT13',ROT13),
   ('/signup',SignUp),
   ('/welcome',Welcome),
-  ('/FizzBuzz',FizzBuzz)
+  ('/FizzBuzz',FizzBuzz),
+  webapp2.Route('/blog',handler=Blog),
+  webapp2.Route('/blog/newpost',handler=BlogNewPost)
 ], debug=True)

@@ -1,0 +1,29 @@
+{% extends "blog.html" %}
+{% block content %}
+  <form class="form-horizontal">
+  <fieldset>
+    <legend>Create a new post</legend>
+
+    <div class="form-group">
+      <label class="col-lg-2 control-label">Subject</label>
+      <div class="col-lg-10">
+        <input type="text" class="form-control"  placeholder="This is my subject">
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label for="textArea" class="col-lg-2 control-label">Textarea</label>
+      <div class="col-lg-10">
+        <textarea class="form-control" rows="3" id="textArea"></textarea>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <div class="col-lg-10 col-lg-offset-2">
+        <button class="btn btn-default">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+  </fieldset>
+</form>
+{% endblock %}
