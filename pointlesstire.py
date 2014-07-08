@@ -104,7 +104,7 @@ class FizzBuzz(webapp2.RequestHandler):
     #self.response.out.write("<h1>Python code work fine!n=%d</h1>" % n)
 
 class BlogModel(db.Model):
-  title = db.StringProperty(required=True)
+  subject = db.StringProperty(required=True)
   content = db.TextProperty(required=True)
   created = db.DateTimeProperty(auto_now_add=True)
   
@@ -116,7 +116,15 @@ class BlogNewPost(BaseHandler):
   def get(self):
     self.render('blog_newpost.html')
   def post(self):
-    pass
+    subject = self.request.get("subject")
+    content = self.request.get("content")
+    if subject and content:
+      a = BlogModel(subject=subject, content=content) 
+      a.put()
+      self.redirect("/blog")
+    else:
+      self.render('blog_newpost.html',error=True)
+    
 
 app = webapp2.WSGIApplication([
   ('/', MainHandler),
