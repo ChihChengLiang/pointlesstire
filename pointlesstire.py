@@ -103,6 +103,11 @@ class FizzBuzz(webapp2.RequestHandler):
     self.response.out.write(template.render(n=n))
     #self.response.out.write("<h1>Python code work fine!n=%d</h1>" % n)
 
+## The blog
+
+def blog_key(name="default"):
+  return db.Key.from_path('blogs',name)
+
 class BlogModel(db.Model):
   subject = db.StringProperty(required=True)
   content = db.TextProperty(required=True)
@@ -110,7 +115,8 @@ class BlogModel(db.Model):
   
 class Blog(BaseHandler):
   def get(self):
-    self.render('blog_main.html')
+    posts = db.GqlQuery("select * from BlogModel order by created desc limit 10")
+    self.render('blog_main.html',posts = posts)
     
 class BlogNewPost(BaseHandler):
   def get(self):

@@ -1,9 +1,14 @@
 {% extends "blog.html" %}
 {% block content %}
+
+{% for post in posts: %}
   <div class="panel panel-default">
-    <div class="panel-heading">Title</div>
+    <div class="panel-heading">{{ post.subject }}</div>
       <div class="panel-body">
-        post content
+        {{ post.content }}
       </div>
-  </div>
+      <div class="panel-footer">{{ post.created }}</div>
+  </div> 
+{% endfor %}
+  
 {% endblock %}
