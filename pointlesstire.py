@@ -222,7 +222,7 @@ class SignUpUnit4(BaseHandler):
         user_correct = USER_RE.match(username)
         pwd_correct = PWD_RE.match(password)
         vrypwd_correct = password == self.request.get('verify')
-        email_correct = EML_RE.match(self.request.get('email'))
+        email_correct = True  # EML_RE.match(self.request.get('email'))
         error_msg = {
             'user_error': "That's not a valid username.",
             'pwd_error': "That wasn't a valid password.",
