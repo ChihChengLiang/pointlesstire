@@ -1,65 +1,76 @@
-<html><head>
+<html>
+
+<head>
     <title>Sign Up</title>
     <style type="text/css">
-      .label {text-align: right}
-      .error {color: red}
+        .label {
+            text-align: right
+        }
+        .error {
+            color: red
+        }
     </style>
+</head>
 
-  <body style="">
+<body style="">
     <h2>Signup</h2>
     <form method="post">
-      <table>
-        <tbody><tr>
-          <td class="label">
-            Username
-          </td>
-          <td>
-            <input type="text" name="username" value="">
-          </td>
-          <td class="error">
-            {{user_error}}
-          </td>
-        </tr>
+        <table>
+            <tbody>
+                <tr>
+                    <td class="label">
+                        Username
+                    </td>
+                    <td>
+                        <input type="text" name="username" value="">
+                    </td>
+                    <td class="error">
+                        {{user_error}}
+                    </td>
+                </tr>
 
-        <tr>
-          <td class="label">
-            Password
-          </td>
-          <td>
-            <input type="password" name="password" value="">
-          </td>
-          <td class="error">
-            {{pwd_error}}
-          </td>
-        </tr>
+                <tr>
+                    <td class="label">
+                        Password
+                    </td>
+                    <td>
+                        <input type="password" name="password" value="">
+                    </td>
+                    <td class="error">
+                        {{pwd_error}}
+                    </td>
+                </tr>
 
-        <tr>
-          <td class="label">
-            Verify Password
-          </td>
-          <td>
-            <input type="password" name="verify" value="">
-          </td>
-          <td class="error">
-            {{vrypwd_error}}
-          </td>
-        </tr>
+                <tr>
+                    <td class="label">
+                        Verify Password
+                    </td>
+                    <td>
+                        <input type="password" name="verify" value="">
+                    </td>
+                    <td class="error">
+                        {{vrypwd_error}}
+                    </td>
+                </tr>
 
-        <tr>
-          <td class="label">
-            Email (optional)
-          </td>
-          <td>
-            <input type="text" name="email" value="">
-          </td>
-          <td class="error">
-            {{email_error}}
-          </td>
-        </tr>
-      </tbody></table>
+                <tr>
+                    <td class="label">
+                        Email (optional)
+                    </td>
+                    <td>
+                        <input type="text" name="email" value="">
+                    </td>
+                    <td class="error">
+                        {{email_error}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
-      <input type="submit">
+        <input type="submit">
     </form>
-  
 
-</body></html>
+
+</body>
+
+</html>
