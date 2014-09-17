@@ -232,7 +232,7 @@ class SignUpUnit4(BaseHandler):
         if user_correct and pwd_correct and vrypwd_correct \
             and email_correct:
             self.set_secure_cookie('username', username)
-            self.redirect('/welcomeUnit4')
+            self.redirect('/welcome')
         else:
             if user_correct:
                 error_msg['user_error'] = ''
@@ -256,18 +256,18 @@ class WelcomeUnit4(BaseHandler):
             self.response.out.write('<h1>Welcom,%s!</h1>'
                                     % username.split('|')[0])
         else:
-            self.redirect('/signupUnit4')
+            self.redirect('/signup')
 
 
-app = webapp2.WSGIApplication([
+app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
+                                 #    ('/signup', SignUp),
+                                 #    ('/welcome', Welcome),
     ('/', MainHandler),
     ('/ROT13', ROT13),
-    ('/signup', SignUp),
-    ('/welcome', Welcome),
     ('/FizzBuzz', FizzBuzz),
     ('/blog/?', Blog),
     ('/blog/newpost', BlogNewPost),
     ('/blog/(\d+)', PostPage),
-    ('/signupUnit4', SignUpUnit4),
-    ('/welcomeUnit4', WelcomeUnit4),
+    ('/signup', SignUpUnit4),
+    ('/welcome', WelcomeUnit4),
     ], debug=True)
