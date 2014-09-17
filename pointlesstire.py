@@ -16,6 +16,18 @@ EML_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
 
 alphabet_list = list(string.lowercase)
 
+secret_key = '17FG&T8T6;-zCi:_&eLJ8gJf?.B;wy'
+
+
+def make_hash(val):
+    return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
+
+
+def check_hash(secure_val):
+    val = secure_val.split('|')[0]
+    if secure_val == make_hash(val):
+        return val
+
 
 class BaseHandler(webapp2.RequestHandler):
 
