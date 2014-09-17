@@ -9,6 +9,7 @@ import string
 import re
 from jinja2 import Environment, FileSystemLoader
 from google.appengine.ext import db
+import hmac
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PWD_RE = re.compile(r"^.{3,20}$")
@@ -20,7 +21,7 @@ secret_key = '17FG&T8T6;-zCi:_&eLJ8gJf?.B;wy'
 
 
 def make_hash(val):
-    return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
+    return '%s|%s' % (val, hmac.new(secret_key, val).hexdigest())
 
 
 def check_hash(secure_val):
@@ -42,8 +43,8 @@ class BaseHandler(webapp2.RequestHandler):
 
     def set_secure_cookie(self, name, val):
         cookie_val = make_hash(val)
-        self.response.headers.add_header('Set-Cookie', '%s=%s,path=/'
-                % (name, cookie_val))
+        self.response.headers.add_header('Set-Cookie', '%s=%s ; path=/'
+                % (str(name), str(cookie_val)))
 
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
