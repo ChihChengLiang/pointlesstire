@@ -202,6 +202,63 @@ class PostPage(BaseHandler):
         self.render('blog_permalink.html', post=post)
 
 
+# Unit 4
+
+class SignUpUnit4(BaseHandler):
+
+    def get(self):
+        template_values = {
+            'user_error': '',
+            'pwd_error': '',
+            'vrypwd_error': '',
+            'email_error': '',
+            }
+        path = os.path.join(os.path.dirname(__file__), 'signup.html')
+        self.response.out.write(template.render(path, template_values))
+
+    def post(self):
+        username = self.request.get('username')
+        password = self.request.get('password')
+        user_correct = USER_RE.match(username)
+        pwd_correct = PWD_RE.match(password)
+        vrypwd_correct = password == self.request.get('verify')
+        email_correct = EML_RE.match(self.request.get('email'))
+        error_msg = {
+            'user_error': "That's not a valid username.",
+            'pwd_error': "That wasn't a valid password.",
+            'vrypwd_error': "Your passwords didn't match.",
+            'email_error': "That's not a valid email.",
+            }
+        if user_correct and pwd_correct and vrypwd_correct \
+            and email_correct:
+            self.set_secure_cookie('username', username)
+            self.redirect('/welcomeUnit4')
+        else:
+            if user_correct:
+                error_msg['user_error'] = ''
+            if pwd_correct:
+                error_msg['pwd_error'] = ''
+            if vrypwd_correct:
+                error_msg['vrypwd_error'] = ''
+            if email_correct:
+                error_msg['email_error'] = ''
+            path = os.path.join(os.path.dirname(__file__), 'signup.html'
+                                )
+            self.response.out.write(template.render(path, error_msg))
+        pass
+
+
+class WelcomeUnit4(BaseHandler):
+
+    def get(self):
+        username = self.read_secure_cookie('username')
+        if username:
+            self.response.out.write('<h1>Welcom,%s!</h1>'
+                                    % username.split('|')[0])
+        else:
+            self.redirect('/signupUnit4')
+
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/ROT13', ROT13),
@@ -211,4 +268,6 @@ app = webapp2.WSGIApplication([
     ('/blog/?', Blog),
     ('/blog/newpost', BlogNewPost),
     ('/blog/(\d+)', PostPage),
+    ('/signupUnit4', SignUpUnit4),
+    ('/welcomeUnit4', WelcomeUnit4),
     ], debug=True)
