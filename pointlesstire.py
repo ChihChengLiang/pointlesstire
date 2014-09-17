@@ -40,6 +40,15 @@ class BaseHandler(webapp2.RequestHandler):
         template = jinja_env.get_template(filename)
         self.response.out.write(template.render(template_values))
 
+    def set_secure_cookie(self, name, val):
+        cookie_val = make_hash(val)
+        self.response.headers.add_header('Set-Cookie', '%s=%s,path=/'
+                % (name, cookie_val))
+
+    def read_secure_cookie(self, name):
+        cookie_val = self.request.cookies.get(name)
+        return cookie_val and check_hash(cookie_val)
+
 
 class MainHandler(webapp2.RequestHandler):
 
