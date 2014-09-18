@@ -10,6 +10,8 @@ import re
 from jinja2 import Environment, FileSystemLoader
 from google.appengine.ext import db
 import hmac
+import random
+import hashlib
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PWD_RE = re.compile(r"^.{3,20}$")
@@ -49,6 +51,14 @@ class BaseHandler(webapp2.RequestHandler):
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
         return cookie_val and check_hash(cookie_val)
+
+    def login(self, user):
+        self.set_secure_cookie('user_id', str(user.key().id()))
+
+    def initialize(self, *a, **kw):
+        webapp2.RequestHandler.initialize(self, *a, **kw)
+        uid = self.read_secure_cookie('user_id')
+        self.user = uid and User.by_id(int(uid))
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -217,11 +227,12 @@ class SignUpUnit4(BaseHandler):
         self.response.out.write(template.render(path, template_values))
 
     def post(self):
-        username = self.request.get('username')
-        password = self.request.get('password')
-        user_correct = USER_RE.match(username)
-        pwd_correct = PWD_RE.match(password)
-        vrypwd_correct = password == self.request.get('verify')
+        self.username = self.request.get('username')
+        self.password = self.request.get('password')
+        self.email = self.request.get('email')
+        user_correct = USER_RE.match(self.username)
+        pwd_correct = PWD_RE.match(self.password)
+        vrypwd_correct = self.password == self.request.get('verify')
         email_correct = True  # EML_RE.match(self.request.get('email'))
         error_msg = {
             'user_error': "That's not a valid username.",
@@ -231,9 +242,9 @@ class SignUpUnit4(BaseHandler):
             }
         if user_correct and pwd_correct and vrypwd_correct \
             and email_correct:
-            self.set_secure_cookie('username', username)
-            self.redirect('/welcome')
+            self.done()
         else:
+
             if user_correct:
                 error_msg['user_error'] = ''
             if pwd_correct:
@@ -242,21 +253,112 @@ class SignUpUnit4(BaseHandler):
                 error_msg['vrypwd_error'] = ''
             if email_correct:
                 error_msg['email_error'] = ''
-            path = os.path.join(os.path.dirname(__file__), 'signup.html'
-                                )
-            self.response.out.write(template.render(path, error_msg))
-        pass
+            self.write('signup.html', **error_msg)
+
+    def done(self, *a, **kw):
+        raise NotImplementedError
+
+
+class Register(SignUpUnit4):
+
+    def done(self):
+
+        # make sure the user not exist
+
+        u = User.by_name(self.username)
+        if u:
+            msg = 'The user already exists.'
+            self.write('signup.html', user_error=msg)
+        else:
+            u = User.register(self.username, self.password, self.email)
+        u.put()
+
+        self.login(u)
+        self.redirect('/welcome')
 
 
 class WelcomeUnit4(BaseHandler):
 
     def get(self):
-        username = self.read_secure_cookie('username')
-        if username:
+        if self.user:
             self.response.out.write('<h1>Welcom,%s!</h1>'
-                                    % username.split('|')[0])
+                                    % self.user.name)
         else:
             self.redirect('/signup')
+
+
+class Login(BaseHandler):
+
+    def get(self):
+        self.render('login.html')
+
+    def post(self):
+        username = self.request.get('username')
+        password = self.request.get('password')
+
+        u = User.login(username, password)
+
+        if u:
+            self.login(u)
+            self.redirect('/welcome')
+        else:
+            msg = 'invalid login'
+            self.render('login.html', error=msg)
+
+
+def make_salt(length=5):
+    return ''.join(random.choice(string.letters) for x in
+                   xrange(length))
+
+
+def make_pw_hash(name, pw, salt=None):
+    if not salt:
+        salt = make_salt()
+    h = hashlib.sha256(name + pw + salt).hexdigest()
+    return '%s,%s' % (salt, h)
+
+
+def valid_pw(name, password, h):
+    salt = h.split(',')[0]
+    return h == make_pw_hash(name, password, salt)
+
+
+def users_key(group='default'):
+    return db.Key.from_path('users', group)
+
+
+class User(db.Model):
+
+    name = db.StringProperty(required=True)
+    pw_hash = db.StringProperty(required=True)
+    email = db.StringProperty()
+
+    @classmethod
+    def by_id(cls, uid):
+        return User.get_by_id(uid, parent=users_key())
+
+    @classmethod
+    def by_name(cls, name):
+        u = User.all().filter('name =', name).get()
+        return u
+
+    @classmethod
+    def register(
+        cls,
+        name,
+        pw,
+        email=None,
+        ):
+
+        pw_hash = make_pw_hash(name, pw)
+        return User(parent=users_key(), name=name, pw_hash=pw_hash,
+                    email=email)
+
+    @classmethod
+    def login(cls, name, pw):
+        u = cls.by_name(name)
+        if u and valid_pw(name, pw, u.pw_hash):
+            return u
 
 
 app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
@@ -268,6 +370,7 @@ app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
     ('/blog/?', Blog),
     ('/blog/newpost', BlogNewPost),
     ('/blog/(\d+)', PostPage),
-    ('/signup', SignUpUnit4),
+    ('/signup', Register),
     ('/welcome', WelcomeUnit4),
+    ('/login', Login),
     ], debug=True)
