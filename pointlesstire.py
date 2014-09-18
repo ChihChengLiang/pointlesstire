@@ -55,6 +55,10 @@ class BaseHandler(webapp2.RequestHandler):
     def login(self, user):
         self.set_secure_cookie('user_id', str(user.key().id()))
 
+    def logout(self):
+        self.response.headers.add_header('Set-Cookie',
+                'user_id=; Path=/')
+
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
@@ -361,6 +365,13 @@ class User(db.Model):
             return u
 
 
+class Logout(BaseHandler):
+
+    def get(self):
+        self.logout()
+        self.redirect('/signup')
+
+
 app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
                                  #    ('/signup', SignUp),
                                  #    ('/welcome', Welcome),
@@ -373,4 +384,5 @@ app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
     ('/signup', Register),
     ('/welcome', WelcomeUnit4),
     ('/login', Login),
+    ('/logout', Logout),
     ], debug=True)
