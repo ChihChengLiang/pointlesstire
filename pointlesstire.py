@@ -12,6 +12,8 @@ from google.appengine.ext import db
 import hmac
 import random
 import hashlib
+import json
+from xml.dom import minidom
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PWD_RE = re.compile(r"^.{3,20}$")
@@ -180,10 +182,13 @@ class BlogModel(db.Model):
 
 class Blog(BaseHandler):
 
+    def queryPost(self):
+        return db.GqlQuery('select * from BlogModel order by created desc limit 10'
+                           )
+
     def get(self):
-        posts = \
-            db.GqlQuery('select * from BlogModel order by created desc limit 10'
-                        )
+        posts = self.queryPost()
+
         self.render('blog_main.html', posts=posts)
 
 
@@ -206,10 +211,14 @@ class BlogNewPost(BaseHandler):
 
 class PostPage(BaseHandler):
 
-    def get(self, post_id):
+    def getkey(self, post_id):
         key = db.Key.from_path('BlogModel', int(post_id),
                                parent=blog_key())
-        post = db.get(key)
+        return db.get(key)
+
+    def get(self, post_id):
+
+        post = self.getkey(post_id)
         if not post:
             self.render('custom404.html')
             return
@@ -372,6 +381,49 @@ class Logout(BaseHandler):
         self.redirect('/signup')
 
 
+# Unit5
+
+def db_instance_to_dict(instance):
+    x = minidom.parseString(instance.to_xml())
+    property_dict = {}
+
+    # here's how xml looks like. use x.toprettyxml() to view it
+    # <?xml version="1.0" ?>
+    # <entity key="ahFkZXZ-cG9pbnRsZXNzdGlyZXIoCxIFYmxvZ3MiB2RlZmF1bHQMCxIJQmxvZ01vZGVsGICAgICAgIAKDA" kind="BlogModel">
+    # ....
+    # ....<key>tag:dev~pointlesstire.gmail.com,2014-09-20:BlogModel[ahFkZXZ-cG9pbnRsZXNzdGlyZXIoCxIFYmxvZ3MiB2RlZmF1bHQMCxIJQmxvZ01vZGVsGICAgICAgIAKDA]</key>
+    # ....<property name="content" type="text">blablablab</property>
+    # ....<property name="created" type="gd:when">2014-09-20 11:57:30.466419</property>
+    #   <property name="subject" type="string">bla</property>
+
+    for d in x.getElementsByTagName('property'):
+        k = d.attributes['name'].value
+        v = d.childNodes[0].nodeValue
+        property_dict[k] = v
+    return property_dict
+
+
+class FrontJSON(Blog):
+
+    def get(self):
+        posts = self.queryPost()
+        posts_list = []
+        for post in posts:
+            posts_list.append(db_instance_to_dict(post))
+        self.response.out.write(json.dumps(posts_list))
+
+
+class PostPageJSON(PostPage):
+
+    def get(self, post_id):
+
+        post = self.getkey(post_id)
+        if not post:
+            self.render('custom404.html')
+            return
+        self.response.out.write(json.dumps(db_instance_to_dict(post)))
+
+
 app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
                                  #    ('/signup', SignUp),
                                  #    ('/welcome', Welcome),
@@ -385,4 +437,6 @@ app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
     ('/welcome', WelcomeUnit4),
     ('/login', Login),
     ('/logout', Logout),
+    ('/.json', FrontJSON),
+    ('/blog/(\d+).json', PostPageJSON),
     ], debug=True)
