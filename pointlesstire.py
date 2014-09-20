@@ -431,7 +431,7 @@ app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
     ('/ROT13', ROT13),
     ('/FizzBuzz', FizzBuzz),
     ('/blog/?', Blog),
-    ('/blog/newpost', BlogNewPost),
+    ('/newpost', BlogNewPost),
     ('/blog/(\d+)', PostPage),
     ('/signup', Register),
     ('/welcome', WelcomeUnit4),
