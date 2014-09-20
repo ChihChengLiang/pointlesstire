@@ -45,6 +45,12 @@ class BaseHandler(webapp2.RequestHandler):
         template = jinja_env.get_template(filename)
         self.response.out.write(template.render(template_values))
 
+    def render_json(self, d):
+        json_txt = json.dumps(d)
+        self.response.headers['Content-Type'] = \
+            'application/json; charset=UTF-8'
+        self.response.out.write(json_txt)
+
     def set_secure_cookie(self, name, val):
         cookie_val = make_hash(val)
         self.response.headers.add_header('Set-Cookie', '%s=%s ; path=/'
@@ -410,7 +416,7 @@ class FrontJSON(Blog):
         posts_list = []
         for post in posts:
             posts_list.append(db_instance_to_dict(post))
-        self.response.out.write(json.dumps(posts_list))
+        self.render_json(posts_list)
 
 
 class PostPageJSON(PostPage):
@@ -421,7 +427,7 @@ class PostPageJSON(PostPage):
         if not post:
             self.render('custom404.html')
             return
-        self.response.out.write(json.dumps(db_instance_to_dict(post)))
+        self.render_json(db_instance_to_dict(post))
 
 
 app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
