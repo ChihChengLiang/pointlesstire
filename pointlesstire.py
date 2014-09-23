@@ -14,6 +14,8 @@ import random
 import hashlib
 import json
 from xml.dom import minidom
+from datetime import datetime, timedelta
+from google.appengine.api import memcache
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PWD_RE = re.compile(r"^.{3,20}$")
@@ -223,12 +225,17 @@ class PostPage(BaseHandler):
         return db.get(key)
 
     def get(self, post_id):
+        post_key = 'POST_' + post_id
+        (post, age) = age_get(post_key)
+        if not post:
+            post = self.getkey(post_id)
+            age_set(post_key, post)
+            age = 0
 
-        post = self.getkey(post_id)
         if not post:
             self.render('custom404.html')
             return
-        self.render('blog_permalink.html', post=post)
+        self.render('blog_permalink.html', post=post, age=age_str(age))
 
 
 # Unit 4
@@ -303,7 +310,7 @@ class WelcomeUnit4(BaseHandler):
             self.response.out.write('<h1>Welcom,%s!</h1>'
                                     % self.user.name)
         else:
-            self.redirect('/signup')
+            self.redirect('/blog/signup')
 
 
 class Login(BaseHandler):
@@ -384,7 +391,7 @@ class Logout(BaseHandler):
 
     def get(self):
         self.logout()
-        self.redirect('/signup')
+        self.redirect('/blog/signup')
 
 
 # Unit5
@@ -430,19 +437,77 @@ class PostPageJSON(PostPage):
         self.render_json(db_instance_to_dict(post))
 
 
+# Unit 6
+
+def age_set(key, val):
+    save_time = datetime.utcnow()
+    memcache.set(key, (val, save_time))
+
+
+def age_get(key):
+    r = memcache.get(key)
+    if r:
+        (val, save_time) = r
+        age = (datetime.utcnow() - save_time).total_seconds()
+    else:
+        (val, age) = (None, 0)
+    return (val, age)
+
+
+def add_post(ip, post):
+    post.put()
+    get_posts(update=True)
+    return str(post.key().id())
+
+
+def get_posts(update=False):
+    q = BlogModel.all().order('-created').fetch(limit=10)
+    mc_key = 'BLOGS'
+
+    (posts, age) = age_get(mc_key)
+    if update or posts is None:
+        posts = list(q)
+        age_set(mc_key, posts)
+
+    return (posts, age)
+
+
+def age_str(age):
+    s = 'Queried %s seconds ago'
+    age = int(age)
+    if age == 1:
+        s = s.replace('seconds', 'second')
+    return s % age
+
+
+class BlogFront(Blog):
+
+    def get(self):
+        (posts, age) = get_posts()
+        self.render('blog_main.html', posts=posts, age=age_str(age))
+
+
+class Flush(BaseHandler):
+
+    def get(self):
+        memcache.flush_all()
+        self.redirect('/blog')
+
+
 app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
                                  #    ('/signup', SignUp),
                                  #    ('/welcome', Welcome),
     ('/', MainHandler),
     ('/ROT13', ROT13),
     ('/FizzBuzz', FizzBuzz),
-    ('/blog/?', Blog),
-    ('/newpost', BlogNewPost),
+    ('/blog/?', BlogFront),
+    ('/blog/newpost', BlogNewPost),
     ('/blog/(\d+)', PostPage),
-    ('/signup', Register),
+    ('/blog/signup', Register),
     ('/welcome', WelcomeUnit4),
     ('/login', Login),
     ('/logout', Logout),
     ('/.json', FrontJSON),
     ('/blog/(\d+).json', PostPageJSON),
+    ('/blog/flush', Flush),
     ], debug=True)

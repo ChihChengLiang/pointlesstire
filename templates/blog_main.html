@@ -1,13 +1,11 @@
-{% extends "blog.html" %}
-{% block content %}
-
-{% for post in posts: %}
-  <div class="panel panel-default">
-    <div class="panel-heading"><a href="/blog/{{post.key().id()}}">{{ post.subject }}</a><small>{{ post.created }}</small></div>
-      <div class="panel-body">
+{% extends "blog.html" %} {% block content %} {% for post in posts: %}
+<div class="panel panel-default">
+    <div class="panel-heading"><a href="/blog/{{post.key().id()}}">{{ post.subject }}</a><small>{{ post.created }}</small>
+    </div>
+    <div class="panel-body">
         {{ post.content }}
-      </div>
-  </div> 
-{% endfor %}
-  
-{% endblock %}
+        <span class="label label-primary">{{age}}</span>
+    </div>
+
+</div>
+{% endfor %} {% endblock %}
