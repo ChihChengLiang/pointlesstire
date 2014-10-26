@@ -494,6 +494,18 @@ class Flush(BaseHandler):
         self.redirect('/blog')
 
 
+class VanGoahFail(BaseHandler):
+
+    def get(self):
+        self.write('vanGoahFail.html')
+
+
+class BloodCell(BaseHandler):
+
+    def get(self):
+        self.write('bloodcell.html')
+
+
 app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
                                  #    ('/signup', SignUp),
                                  #    ('/welcome', Welcome),
@@ -510,4 +522,6 @@ app = webapp2.WSGIApplication([  # These two Unit2 implementation is depreciated
     ('/.json', FrontJSON),
     ('/blog/(\d+).json', PostPageJSON),
     ('/blog/flush', Flush),
+    ('/vanGoahFail', VanGoahFail),
+    ('/bloodcell', BloodCell),
     ], debug=True)
